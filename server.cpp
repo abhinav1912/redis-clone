@@ -7,11 +7,23 @@
 
 #define PORT 8080
 #define MAXCONN 3
+#define MESSAGE_LEN 64
 
 static void log_error_and_abort(const char *msg) {
     int err = errno;
     fprintf(stderr, "[%d] %s\n", err, msg);
     abort();
+}
+
+static void handle_connection(int connfd) {
+    char readbuf[MESSAGE_LEN] = {};
+    int n = read(connfd, readbuf, MESSAGE_LEN);
+    if (n < 0) {
+        perror("Error while reading");
+    }
+    printf("Client %d's message: %s", connfd, readbuf);
+    char response_buf[] = "Response!";
+    write(connfd, response_buf, sizeof(response_buf));
 }
 
 int main() {
@@ -47,7 +59,7 @@ int main() {
          log_error_and_abort("Error while accepting connection");
             continue;
         }
-        // handle connection
+        handle_connection(connfd);
         close(connfd);
     }
     return 0;
