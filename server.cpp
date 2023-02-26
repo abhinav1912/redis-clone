@@ -20,8 +20,9 @@ static void handle_connection(int connfd) {
     int n = read(connfd, readbuf, MESSAGE_LEN);
     if (n < 0) {
         perror("Error while reading");
+        return;
     }
-    printf("Client %d's message: %s", connfd, readbuf);
+    printf("Client %d's message: %s\n", connfd, readbuf);
     char response_buf[] = "Response!";
     write(connfd, response_buf, sizeof(response_buf));
 }
