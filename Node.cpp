@@ -3,7 +3,8 @@
 #include<errno.h>
 #include<sys/socket.h>
 #include<netinet/in.h>
-
+#include<unistd.h>
+#include<cassert>
 #include "Node.h"
 
 void Node::log_error_and_abort(const char *msg) {
@@ -13,12 +14,28 @@ void Node::log_error_and_abort(const char *msg) {
 }
 
 int Node::read_full(int fd, char *buf, size_t n) {
-    // TODO: complete implementation
+    while (n>0) {
+        ssize_t rv = read(fd, buf, n);
+        if (rv <= 0) {
+            return -1;
+        }
+        assert((size_t)rv <= n);
+        buf += rv;
+        n -= rv;
+    }
     return 0;
 }
 
 int Node::write_full(int fd, char *buf, size_t n) {
-    // TODO: complete implementation
+    while (n>0) {
+        ssize_t rv = write(fd, buf, n);
+        if (rv < 0) {
+            return -1;
+        }
+        assert((size_t)rv <= n);
+        buf += rv;
+        n -= rv;
+    }
     return 0;
 }
 
