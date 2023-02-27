@@ -31,7 +31,7 @@ class Server: Node {
 
     public:
     void listen_for_connections() {
-        int sockfd = get_socket();
+        int sockfd = get_socket(true);
         struct sockaddr_in addr = get_address(PORT, INADDR_ANY);
 
         if (bind(sockfd, (const sockaddr *) &addr, sizeof(addr)) < 0) {

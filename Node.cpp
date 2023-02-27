@@ -22,14 +22,16 @@ int Node::write_full(int fd, char *buf, size_t n) {
     return 0;
 }
 
-int Node::get_socket() {
+int Node::get_socket(bool set_reuse_opt) {
     int sockfd = socket(AF_INET, SOCK_STREAM, 0), opt = 1;
     if (sockfd < 0) {
         log_error_and_abort("Error while opening socket");
     }
 
-    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) {
-        log_error_and_abort("Error setting socket options");
+    if (set_reuse_opt) {
+        if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) {
+           log_error_and_abort("Error setting socket options");
+        }
     }
     return sockfd;
 }
