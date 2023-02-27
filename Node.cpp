@@ -60,3 +60,7 @@ sockaddr_in Node::get_address(int port, int address) {
     addr.sin_addr.s_addr = htonl(address);
     return addr;
 }
+
+void Node::log_message(const char *msg) {
+    fprintf(stdout, "%s\n", msg);
+}
