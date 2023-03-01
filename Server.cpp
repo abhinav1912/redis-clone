@@ -40,7 +40,7 @@ class Server: Node {
 
         // handle request
         rbuf[4 + len] = '\0';
-        printf("Client %d says: %s\n", connfd, rbuf[4]);
+        printf("Client %d says: %s\n", connfd, &rbuf[4]);
 
         const char reply[] = "Served response!";
         char writebuf[4 + sizeof(reply)] = {};
