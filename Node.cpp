@@ -5,6 +5,7 @@
 #include<netinet/in.h>
 #include<unistd.h>
 #include<cassert>
+#include<fcntl.h>
 #include "Node.h"
 
 void Node::log_error_and_abort(const char *msg) {
@@ -63,4 +64,17 @@ sockaddr_in Node::get_address(int port, int address) {
 
 void Node::log_message(const char *msg) {
     fprintf(stdout, "%s\n", msg);
+}
+
+void Node::set_fd_as_nonblocking(int fd) {
+    errno = 0;
+    int flags = fcntl(fd, F_GETFL, 0);
+    if (errno) {
+        log_error_and_abort("fcntl get error");
+    }
+    flags |= O_NONBLOCK;
+    fcntl(fd, F_SETFL, flags);
+    if (errno) {
+        log_error_and_abort("fcntl set error");
+    }
 }

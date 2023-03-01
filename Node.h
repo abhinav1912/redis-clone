@@ -8,4 +8,5 @@ class Node {
         int write_full(int fd, char *buf, size_t n);
         void log_message(const char *msg);
         void log_error_and_abort(const char *msg);
+        void set_fd_as_nonblocking(int fd);
 };
