@@ -20,9 +20,14 @@ static void log_error_and_abort(const char *msg) {
 class Server: Node {
     int single_request(int connfd) {
         char rbuf[4 + MAX_MESSAGE_LEN + 1] = {};
+        errno = 0;
         int rv = read_full(connfd, rbuf, 4);
         if (rv) {
-            log_message("read() error");
+            if (errno) {
+                log_message("read() error");
+            } else {
+                log_message("EOF");
+            }
             return rv;
         }
         uint32_t len = 0;

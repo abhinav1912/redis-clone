@@ -28,10 +28,15 @@ class Client: Node {
         if (err) {
             return err;
         }
-
+        
+        errno = 0;
         err = read_full(fd, readbuf, 4);
         if (err) {
-            log_message("read() error");
+            if (errno) {
+                log_message("read() error");
+            } else {
+                log_message("EOF");
+            }
             return err;
         }
         
