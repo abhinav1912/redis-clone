@@ -11,6 +11,26 @@
 #define MAXCONN 3
 #define MAX_MESSAGE_LEN 4096
 
+enum {
+    STATE_REQ = 0,
+    STATE_RES = 1,
+    STATE_END = 2
+};
+
+struct Connection
+{
+    int state = STATE_REQ;
+    int fd = -1;
+    // read buffer
+    size_t readbuf_size = 0;
+    uint8_t readbuf[4 + MAX_MESSAGE_LEN];
+    // write buffer
+    size_t writebuf_size = 0;
+    size_t writebuf_sent = 0;
+    uint8_t writebuf[4 + MAX_MESSAGE_LEN];
+};
+
+
 static void log_error_and_abort(const char *msg) {
     int err = errno;
     fprintf(stderr, "[%d] %s\n", err, msg);
