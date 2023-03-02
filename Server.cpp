@@ -5,6 +5,8 @@
 #include<unistd.h>
 #include<errno.h>
 #include<cstring>
+#include<vector>
+#include<poll.h>
 #include "Node.h"
 
 #define PORT 8080
@@ -88,21 +90,53 @@ class Server: Node {
         if (recv < 0) {
             log_error_and_abort("Error opening listener");
         }
+
+        std::vector<Connection *> connection_mapping;
+        set_fd_as_nonblocking(sockfd);
+        std::vector<struct pollfd> poll_args;
+
         while (true) {
-            struct sockaddr client_addr = {};
-            socklen_t socklen = sizeof(client_addr);
-            int connfd = accept(sockfd, (sockaddr *) &client_addr, (socklen_t *) &socklen);
-            if (connfd < 0) {
-                log_error_and_abort("Error while accepting connection");
-                continue;
+            poll_args.clear();
+            // listening socket is put first
+            struct pollfd polling_fd = {sockfd, POLLIN, 0};
+            poll_args.push_back(polling_fd);
+
+            // iterate over fds
+            for (Connection* connection: connection_mapping) {
+                if (!connection) {
+                    continue;
+                }
+                struct pollfd pfd = {};
+                pfd.fd = connection->fd;
+                pfd.events = (connection->state == STATE_REQ) ? POLLIN : POLLOUT;
+                pfd.events |= POLLERR;
+                poll_args.push_back(pfd);
             }
-            while (true) { // serve just one client for now
-                int err = single_request(connfd);
-                if (err) {
-                    break;
+
+            // poll for active fds
+            int recv = poll(poll_args.data(), poll_args.size(), 1000);
+            if (recv < 0) {
+                log_error_and_abort("polling error");
+            }
+
+            // process active connections
+            for (size_t i = 1; i < poll_args.size(); ++i) {
+                if (poll_args[i].revents) {
+                    Connection *connection = connection_mapping[poll_args[i].fd];
+                    // handle connection
+                    if (connection->state == STATE_END) {
+                        // destroy this connection
+                        connection_mapping[connection->fd] = NULL;
+                        close(connection->fd);
+                        free(connection);
+                    }
                 }
             }
-            close(connfd);
+
+            // accept new connection if listening fd is active
+            if (poll_args[0].revents) {
+                // handle new connection
+            }
         }
     }
 };
