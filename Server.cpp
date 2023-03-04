@@ -77,6 +77,48 @@ class Server: Node {
         return write_full(connfd, writebuf, 4 + len);
     };
 
+    void add_connection(std::vector<Connection*> &connection_mapping, Connection *connection) {
+        if (connection->fd >= connection_mapping.size()) {
+            connection_mapping.resize(connection->fd + 1);
+        }
+        connection_mapping[connection->fd] = connection;
+    }
+
+    int accept_new_connection(std::vector<Connection*> &connection_mapping, int fd) {
+        struct sockaddr_in client_addr = {};
+        socklen_t socklen = sizeof(client_addr);
+        int connfd = accept(fd, (sockaddr *)&client_addr, &socklen);
+        if (connfd < 0){
+            log_message("accept() error");
+            return -1;
+        }
+        set_fd_as_nonblocking(connfd);
+
+        struct Connection *connection = (Connection *) malloc(sizeof(Connection));
+        if (!connection) {
+            close(connfd);
+            return -1;
+        }
+
+        connection->fd = connfd;
+        connection->readbuf_size = 0;
+        connection->writebuf_sent = 0;
+        connection->writebuf_size = 0;
+        add_connection(connection_mapping, connection);
+        return 0;
+    }
+
+    void connection_io(Connection *connection) {
+        if (connection->state == STATE_REQ) {
+            /* handle connection */
+        } else if (connection->state == STATE_RES) {
+            /* handle connection */
+        } else {
+            log_message("State not expected.");
+        }
+        
+    }
+
     public:
     void listen_for_connections() {
         int sockfd = get_socket(true);
@@ -123,7 +165,8 @@ class Server: Node {
             for (size_t i = 1; i < poll_args.size(); ++i) {
                 if (poll_args[i].revents) {
                     Connection *connection = connection_mapping[poll_args[i].fd];
-                    // handle connection
+                    connection_io(connection);
+                    
                     if (connection->state == STATE_END) {
                         // destroy this connection
                         connection_mapping[connection->fd] = NULL;
